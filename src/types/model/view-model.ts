@@ -1,4 +1,4 @@
-import { EventEmitter } from "../components/base/events";
+import { EventEmitter } from "../../components/base/events";
 
 interface IViewConstructor {
     new (container: HTMLElement, events?: EventEmitter): IView; 

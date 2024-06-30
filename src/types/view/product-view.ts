@@ -1,32 +1,6 @@
 import { container } from "webpack";
-import { IView } from "./view";
-import { EventEmitter } from "../components/base/events";
-
-interface IProduct {
-    name: string;
-    category: string;
-    description: string;
-    image: string;
-    cost: number;
-}
-
-interface ICatalogModel {
-    items: IProduct[];
-    setItems(items: IProduct[]) : void;
-    getProduct(id: string) : IProduct;
-}
-
-class CatalogModel implements ICatalogModel {
-    items: IProduct[];
-
-    setItems(items: IProduct[]): void {
-        this.items = items;
-    }
-
-    getProduct(id: string): IProduct {
-        return this.items.filter(product => product.name === id)[0];
-    }
-}
+import { IView } from "../model/view-model";
+import { EventEmitter } from "../../components/base/events";
 
 class ProductView implements IView {
     protected title: HTMLHeadingElement;
