@@ -1,4 +1,4 @@
-import { IEventEmmiter, IView } from "../../types";
+import { IEventEmmiter, IView } from '../../types';
 
 export class BasketItemView implements IView {
 	protected title: HTMLSpanElement;
@@ -30,7 +30,7 @@ export class BasketItemView implements IView {
 		});
 	}
 
-	render(data?: { id: string, title: string }): HTMLElement {
+	render(data?: { id: string; title: string }): HTMLElement {
 		if (data) {
 			this.id = data.id;
 			this.title.textContent = data.title;

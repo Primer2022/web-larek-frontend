@@ -1,6 +1,6 @@
 import { IView } from '../../types';
 
-export class BasketView implements IView {
+export class CatalogView implements IView {
 	constructor(protected container: HTMLElement) {}
 
 	render(data?: { items: HTMLElement[] }): HTMLElement {

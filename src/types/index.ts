@@ -1,30 +1,39 @@
 export interface IBasketModel {
-  items: Map<string, number>;
+	items: Map<string, number>;
 
-  add(id: string): void;
+	add(id: string): void;
 
-  remove(id: string): void;
+	remove(id: string): void;
 }
 
 export interface IEventEmmiter {
-  emit: (event: string, data: unknown) => void;
+	emit: (event: string, data: unknown) => void;
 }
 
 export interface IProduct {
-  id: string;
-  title: string;
+	id: string;
+	title: string;
+	category: string;
+	image: string;
+	price: string;
+}
+
+export interface IOrder {
+	payMethod: string;
+	address: string;
+}
+
+export interface IContacts {
+	email: string;
+	phone: string;
 }
 
 export interface ICatalogModel {
-  items: IProduct[];
+	items: Map<string, IProduct>;
 
-  setItems(items: IProduct[]): void;
+	setItems(items: Map<string, IProduct>): void;
 
-  getProduct(id: string): IProduct;
-}
-
-export interface IViewConstructor {
-  new (container: HTMLElement, events?: IEventEmmiter): IView;
+	getProduct(id: string): IProduct;
 }
 
 export interface IView {
