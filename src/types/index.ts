@@ -12,10 +12,11 @@ export interface IEventEmmiter {
 
 export interface IProduct {
 	id: string;
+	description: string;
+	image: string;
 	title: string;
 	category: string;
-	image: string;
-	price: string;
+	price: number;
 }
 
 export interface IOrder {
@@ -30,6 +31,8 @@ export interface IContacts {
 
 export interface ICatalogModel {
 	items: Map<string, IProduct>;
+
+	addItem(id: string, item: IProduct): void;
 
 	setItems(items: Map<string, IProduct>): void;
 

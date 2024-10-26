@@ -2,38 +2,37 @@ import { IEventEmmiter, IView } from '../../types';
 
 export class BasketItemView implements IView {
 	protected title: HTMLSpanElement;
-	protected addButton: HTMLButtonElement;
+	protected price: HTMLSpanElement;
 	protected removeButton: HTMLButtonElement;
 
-	protected id: string | null = null;
-
 	constructor(
+		protected id: string | null = null,
 		protected container: HTMLElement,
+		protected template: HTMLTemplateElement,
 		protected events: IEventEmmiter
 	) {
-		this.title = container.querySelector(
-			'.basket-item_title'
+		const basketItem = template.content.cloneNode(true) as HTMLLIElement;
+		this.title = basketItem.querySelector(
+			'.card__title'
 		) as HTMLSpanElement;
-		this.addButton = container.querySelector(
-			'.basket-item__add'
+		this.removeButton = basketItem.querySelector(
+			'.basket__item-delete'
 		) as HTMLButtonElement;
-		this.removeButton = container.querySelector(
-			'.basket-item__remove'
-		) as HTMLButtonElement;
+		this.price = basketItem.querySelector(
+			'.card__price'
+		) as HTMLSpanElement;
+		container.appendChild(basketItem);
 
-		this.addButton.addEventListener('click', () => {
-			this.events.emit('ui:basket-add', { id: this.id });
-		});
-
-		this.removeButton.addEventListener('click', () => {
-			this.events.emit('ui:basket-remove', { id: this.id });
-		});
+		// this.removeButton.addEventListener('click', () => {
+		// 	this.events.emit('ui:basket-remove', { id: this.id });
+		// });
 	}
 
-	render(data?: { id: string; title: string }): HTMLElement {
+	render(data?: { id: string; title: string; price: number }): HTMLElement {
 		if (data) {
 			this.id = data.id;
 			this.title.textContent = data.title;
+			this.price.textContent = `${data.price} синапсов`;
 		}
 		return this.container;
 	}

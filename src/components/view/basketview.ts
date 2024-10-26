@@ -1,11 +1,18 @@
-import { IView } from '../../types';
+import { IEventEmmiter, IView } from "../../types";
 
 export class BasketView implements IView {
-	constructor(protected container: HTMLElement) {}
+	constructor(protected container: HTMLElement,
+							protected events: IEventEmmiter) {
+		const basketButton: HTMLButtonElement = document.querySelector('.header__basket');
+		basketButton.addEventListener('click', () => {
+			events.emit('ui:basket-click', {});
+		})
+	}
 
-	render(data?: { items: HTMLElement[] }): HTMLElement {
+	render(data?: { size: number }): HTMLElement {
 		if (data) {
-			this.container.replaceChildren(...data.items);
+			const counter: HTMLSpanElement = document.querySelector('.header__basket-counter');
+			counter.textContent = String(data.size);
 		}
 		return this.container;
 	}

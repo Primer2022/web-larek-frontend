@@ -5,6 +5,11 @@ export class CatalogModel implements ICatalogModel {
 
 	items: Map<string, IProduct> = new Map();
 
+	addItem(id: string, item: IProduct): void {
+		this.items.set(id, item);
+		this._changed()
+	}
+
 	setItems(items: Map<string, IProduct>): void {
 		this.items = items;
 		this._changed();

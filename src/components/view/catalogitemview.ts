@@ -1,44 +1,68 @@
 import { IEventEmmiter, IView } from '../../types';
 
 export class CatalogItemView implements IView {
-	protected cardButton: HTMLButtonElement;
+	protected container: HTMLButtonElement;
 	protected title: HTMLHeadingElement;
 	protected category: HTMLSpanElement;
 	protected image: HTMLImageElement;
 	protected price: HTMLSpanElement;
 
-	protected id: string | null = null;
-
 	constructor(
-		protected container: HTMLElement,
+		protected id: string | null,
+		protected template: HTMLTemplateElement,
 		protected events: IEventEmmiter
 	) {
-		this.cardButton = container.querySelector('.card') as HTMLButtonElement;
-		this.title = container.querySelector('.card__title') as HTMLHeadingElement;
-		this.category = container.querySelector(
+		this.container = template.content.querySelector(".gallery__item").cloneNode(true) as HTMLButtonElement;
+		this.title = this.container.querySelector('.card__title') as HTMLHeadingElement;
+		this.category = this.container.querySelector(
 			'.card__category'
 		) as HTMLSpanElement;
-		this.image = container.querySelector('.card__image') as HTMLImageElement;
-		this.price = container.querySelector('.card__price') as HTMLSpanElement;
+		this.image = this.container.querySelector('.card__image') as HTMLImageElement;
+		this.price = this.container.querySelector('.card__price') as HTMLSpanElement;
 
-		this.cardButton.addEventListener('click', () => {
+		this.container.addEventListener('click', () => {
 			this.events.emit('ui:catalog-click', { id: this.id });
 		});
 	}
 
-	render(data?: {
+	render(container: HTMLElement, data?: {
 		id: string;
+		image: string;
 		title: string;
 		category: string;
-		image: string;
-		price: string;
+		price: number;
 	}): HTMLElement {
 		if (data) {
 			this.id = data.id;
+			this.image.src = data.image;
 			this.title.textContent = data.title;
 			this.category.textContent = data.category;
-			this.image.src = data.image;
-			this.price.textContent = data.price;
+			switch (this.category.textContent) {
+				case "софт-скил": {
+					this.category.classList.add('card__category_soft');
+					break;
+				}
+				case "другое": {
+					this.category.classList.add('card__category_other');
+					break;
+				}
+				case "дополнительное": {
+					this.category.classList.add('card__category_additional');
+					break;
+				}
+				case "кнопка": {
+					this.category.classList.add('card__category_button');
+					break;
+				}
+				case "хард-скил": {
+					this.category.classList.add('card__category_hard');
+					break;
+				}
+				default: {
+					this.category.classList.add('card__category_other');
+				}
+			}
+			this.price.textContent = `${data.price == null ? 0 : data.price} синапсов`;
 		}
 		return this.container;
 	}

@@ -1,4 +1,5 @@
 import { IBasketModel, IEventEmmiter } from '../../types';
+import { CatalogModel } from "./catalogmodel";
 
 export class BasketModel implements IBasketModel {
 	constructor(protected events: IEventEmmiter) {}
@@ -19,6 +20,14 @@ export class BasketModel implements IBasketModel {
 		}
 
 		this._changed();
+	}
+
+	getPrice(catalogModel: CatalogModel): number {
+		let price = 0;
+		this.items.forEach((value, key): void => {
+			price += value * catalogModel.getProduct(key).price;
+		})
+		return price;
 	}
 
 	protected _changed() {

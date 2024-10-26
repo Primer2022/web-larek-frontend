@@ -1,5 +1,6 @@
-export const API_URL = `${process.env.API_ORIGIN}/api/weblarek`;
-export const CDN_URL = `${process.env.API_ORIGIN}/content/weblarek`;
+export const BASE_URL = `${process.env.API_ORIGIN}`;
+export const API_URL = `/api/weblarek`;
+export const CDN_URL = `/content/weblarek`;
 
 export const settings = {
 
