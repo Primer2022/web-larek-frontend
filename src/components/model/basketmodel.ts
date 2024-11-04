@@ -22,7 +22,11 @@ export class BasketModel implements IBasketModel {
 		this._changed();
 	}
 
-	getPrice(catalogModel: CatalogModel): number {
+	getProductPrice(id: string, price: number): number {
+		return this.items.get(id) * price;
+	}
+
+	getBasketPrice(catalogModel: CatalogModel): number {
 		let price = 0;
 		this.items.forEach((value, key): void => {
 			price += value * catalogModel.getProduct(key).price;

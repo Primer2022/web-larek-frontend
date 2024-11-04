@@ -3,18 +3,17 @@ import { EventEmitter } from './components/base/events';
 import { BasketModel } from './components/model/basketmodel';
 import { BasketView } from './components/view/basketview';
 import { CatalogModel } from './components/model/catalogmodel';
-import { BasketItemView } from './components/view/basketitemview';
 import { CatalogView } from './components/view/catalogview';
 import { CatalogItemView } from './components/view/catalogitemview';
-import { OrderModel } from './components/model/ordermodel';
 import { BASE_URL } from './utils/constants';
 import { ShopApi } from './components/ShopApi';
 import { ProductList } from './components/base/productlist';
-import { CardPreviewModal } from "./components/view/modal/cardpreviewmodal";
-import { BasketModal } from "./components/view/modal/basketmodal";
-import { OrderFormModal } from "./components/view/modal/orderformmodal";
-import { ContactsFormModal } from "./components/view/modal/contactsformmodal";
-import { OrderSuccessModal } from "./components/view/modal/ordersuccessmodal";
+import { CardPreviewModal } from './components/view/modal/cardpreviewmodal';
+import { BasketModal } from './components/view/modal/basketmodal';
+import { OrderFormModal } from './components/view/modal/orderformmodal';
+import { ContactsFormModal } from './components/view/modal/contactsformmodal';
+import { OrderSuccessModal } from './components/view/modal/ordersuccessmodal';
+import { IOrder, IProduct } from "./types";
 
 const api: ShopApi = new ShopApi(BASE_URL, {});
 const events: EventEmitter = new EventEmitter();
@@ -23,8 +22,6 @@ const events: EventEmitter = new EventEmitter();
 const productList: ProductList = await api.getProductList();
 
 // TEMPLATES
-const basketItemTemplate: HTMLTemplateElement =
-	document.querySelector('#card-basket');
 const catalogItemTemplate: HTMLTemplateElement =
 	document.querySelector('#card-catalog');
 const catalog: HTMLElement = document.querySelector('#gallery');
@@ -91,6 +88,19 @@ function renderCatalog(items: string[]) {
 	});
 }
 
+function openBasket() {
+	basketModal.open();
+	renderBasketModal();
+}
+
+function renderBasketModal() {
+	const itemsModal: Map<IProduct, number> = new Map();
+	basketModel.items.forEach((amount, id) => {
+		itemsModal.set(catalogModel.items.get(id), basketModel.getProductPrice(id, catalogModel.getProduct(id).price));
+	})
+	basketModal.fill(itemsModal, basketModel.getBasketPrice(catalogModel));
+}
+
 events.on('basket:change', (event: { items: string[] }): void => {
 	renderBasket(event.items);
 });
@@ -105,18 +115,25 @@ events.on('ui:basket-add', (event: { id: string }): void => {
 
 events.on('ui:basket-remove', (event: { id: string }): void => {
 	basketModel.remove(event.id);
-	basketModal.open();
-	basketModal.fill(basketModel.items, catalogModel, basketModel);
+	renderBasketModal();
 });
 
 events.on('ui:basket-click', (): void => {
-	basketModal.open();
-	basketModal.fill(basketModel.items, catalogModel, basketModel);
+	openBasket();
 });
 
 events.on('ui:basket-click-order', (): void => {
+	const items: string[] = [];
+
+	basketModel.items.forEach((amount, id) => {
+		for (let i = 0; i < amount; i++) {
+			items.push(id);
+		}
+	})
+
+	const order: IOrder = {total: basketModel.getBasketPrice(catalogModel), address: null, email: null, payment: null, items: items, phone: null};
 	orderFormModal.open();
-	orderFormModal.reset();
+	orderFormModal.addEventListeners(order);
 });
 
 events.on('ui:catalog-click', (event: { id: string }): void => {
@@ -124,16 +141,17 @@ events.on('ui:catalog-click', (event: { id: string }): void => {
 	cardPreviewModal.fill(catalogModel.getProduct(event.id));
 });
 
-events.on('ui:order', (event: { payMethod: string; address: string }): void => {
+events.on('ui:order', (order: IOrder): void => {
 	contactsFormModal.open();
-	contactsFormModal.reset();
+	contactsFormModal.addEventListeners(order);
 });
 
 events.on(
 	'ui:contacts-order',
-	(event: { email: string; phone: string; order: OrderModel }): void => {
+	(order: IOrder): void => {
+		api.order(order);
 		orderSuccessModal.open();
-		orderSuccessModal.fill(basketModel.getPrice(catalogModel));
+		orderSuccessModal.fill(basketModel.getBasketPrice(catalogModel));
 		basketModel.items.clear();
 	}
 );

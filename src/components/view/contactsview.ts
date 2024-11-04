@@ -1,5 +1,4 @@
 import { IEventEmmiter, IView } from '../../types';
-import { OrderModel } from '../model/ordermodel';
 
 export class ContactsView implements IView {
 	protected email: string;
@@ -9,7 +8,6 @@ export class ContactsView implements IView {
 	constructor(
 		protected container: HTMLElement,
 		protected events: IEventEmmiter,
-		protected order: OrderModel
 	) {
 		const orderDiv = container.querySelector('.order');
 		this.email = orderDiv.querySelector(
@@ -24,7 +22,6 @@ export class ContactsView implements IView {
 			events.emit('ui:contacts-order', {
 				email: this.email,
 				phone: this.phone,
-				order: order
 			});
 		});
 	}

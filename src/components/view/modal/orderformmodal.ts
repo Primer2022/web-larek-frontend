@@ -1,5 +1,5 @@
 import { Modal } from '../../base/modal';
-import { IEventEmmiter } from '../../../types';
+import { IEventEmmiter, IOrder } from "../../../types";
 
 export class OrderFormModal extends Modal {
 
@@ -16,11 +16,12 @@ export class OrderFormModal extends Modal {
 		super(container, template, events);
 	}
 
-	reset(): void {
+	addEventListeners(order: IOrder): void {
 		const modalContainer = this.container.querySelector('.form');
 		this.addressInput = modalContainer.querySelector('.form__input[name="address"]');
 		this.orderButton = modalContainer.querySelector('.order__button');
 		this.addressInput.value = '';
+		this.paymentMethod = 'card';
 		modalContainer.querySelectorAll('.button_alt').forEach(button => {
 			this.paymentButtons.push(button as HTMLButtonElement);
 			button.addEventListener('click', event => {
@@ -30,7 +31,7 @@ export class OrderFormModal extends Modal {
 						button.classList.remove('button_alt-active')
 					});
 					button.classList.add('button_alt-active');
-					this.paymentMethod = button.value;
+					this.paymentMethod = button.name;
 				}
 			})
 		})
@@ -40,7 +41,9 @@ export class OrderFormModal extends Modal {
 		})
 		this.orderButton.addEventListener('click', event => {
 			event.preventDefault();
-			this.events.emit('ui:order', { payMethod: this.paymentMethod, address: this.addressInput.value })
+			order.address = this.addressInput.value;
+			order.payment = this.paymentMethod;
+			this.events.emit('ui:order', order)
 		})
 	}
 }

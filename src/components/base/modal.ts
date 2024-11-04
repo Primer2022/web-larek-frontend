@@ -1,4 +1,4 @@
-import { IEventEmmiter } from "../../types";
+import { IEventEmmiter, IOrder } from "../../types";
 
 export class Modal {
   protected closeButton: HTMLButtonElement;

@@ -1,5 +1,5 @@
 import { Modal } from "../../base/modal";
-import { IEventEmmiter } from "../../../types";
+import { IEventEmmiter, IOrder } from "../../../types";
 
 export class ContactsFormModal extends Modal {
 
@@ -19,7 +19,15 @@ export class ContactsFormModal extends Modal {
     return this.emailFormInput.validity.valid && this.phoneFormInput.validity.valid;
   }
 
-  reset(): void {
+  setPhone(value: string): void {
+    this.phoneFormInput.value = value;
+  }
+
+  setEmail(value: string): void {
+    this.emailFormInput.value = value;
+  }
+
+  addEventListeners(order: IOrder): void {
     const modalContainer = this.container.querySelector('.form');
     this.emailFormInput = modalContainer.querySelector('.form__input[name="email"]');
     this.phoneFormInput = modalContainer.querySelector('.form__input[name="phone"]');
@@ -35,7 +43,9 @@ export class ContactsFormModal extends Modal {
 
     this.orderButton.addEventListener('click', event => {
       event.preventDefault();
-      this.events.emit('ui:contacts-order', {});
+      order.email = this.emailFormInput.value;
+      order.phone = this.phoneFormInput.value;
+      this.events.emit('ui:contacts-order', order);
       this.events.emit('basket:change', {event: { items: null }});
     })
   }
