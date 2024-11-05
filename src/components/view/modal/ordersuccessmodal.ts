@@ -4,7 +4,7 @@ import { IEventEmmiter } from "../../../types";
 export class OrderSuccessModal extends Modal {
 
   protected description: HTMLParagraphElement;
-  protected closeButton: HTMLButtonElement;
+  protected successOrderButton: HTMLButtonElement;
 
   constructor(
     protected container: HTMLElement,
@@ -17,10 +17,10 @@ export class OrderSuccessModal extends Modal {
   fill(price: number): void {
     const modalContainer = this.container.querySelector('.order-success');
     this.description = modalContainer.querySelector('.order-success__description');
-    this.closeButton = modalContainer.querySelector('.order-success__close');
-
+    this.successOrderButton = modalContainer.querySelector('.order-success__close');
     this.description.textContent = `Списано ${price} синапсов`;
-    this.closeButton.addEventListener('click', () => {
+
+    this.successOrderButton.addEventListener('click', () => {
       this.close();
     })
   }
