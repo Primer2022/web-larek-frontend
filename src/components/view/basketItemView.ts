@@ -4,6 +4,7 @@ export class BasketItemView implements IView {
 	protected title: HTMLSpanElement;
 	protected price: HTMLSpanElement;
 	protected removeButton: HTMLButtonElement;
+	protected itemIndex: HTMLSpanElement;
 
 	constructor(
 		protected id: string | null = null,
@@ -21,18 +22,23 @@ export class BasketItemView implements IView {
 		this.price = basketItem.querySelector(
 			'.card__price'
 		) as HTMLSpanElement;
+		this.removeButton.addEventListener('click', () => {
+			events.emit('ui:basket-remove', { id: id });
+		})
+		this.itemIndex = basketItem.querySelector(
+			'.basket__item-index'
+		);
+		this.itemIndex.parentElement.id = id;
+		this.itemIndex.textContent = String(0);
+		this.itemIndex.classList.add(id);
 		container.appendChild(basketItem);
-
-		// this.removeButton.addEventListener('click', () => {
-		// 	this.events.emit('ui:basket-remove', { id: this.id });
-		// });
 	}
 
 	render(data?: { id: string; title: string; price: number }): HTMLElement {
 		if (data) {
 			this.id = data.id;
 			this.title.textContent = data.title;
-			this.price.textContent = `${data.price} синапсов`;
+			this.price.textContent = `${data.price == null ? 0 : data.price} синапсов`;
 		}
 		return this.container;
 	}

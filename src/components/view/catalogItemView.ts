@@ -1,4 +1,5 @@
 import { IEventEmmiter, IView } from '../../types';
+import { CatalogModel } from "../model/catalogModel";
 
 export class CatalogItemView implements IView {
 	protected container: HTMLButtonElement;
@@ -10,7 +11,8 @@ export class CatalogItemView implements IView {
 	constructor(
 		protected id: string | null,
 		protected template: HTMLTemplateElement,
-		protected events: IEventEmmiter
+		protected events: IEventEmmiter,
+		protected catalogModel: CatalogModel
 	) {
 		this.container = template.content.querySelector(".gallery__item").cloneNode(true) as HTMLButtonElement;
 		this.title = this.container.querySelector('.card__title') as HTMLHeadingElement;
@@ -25,7 +27,7 @@ export class CatalogItemView implements IView {
 		});
 	}
 
-	render(container: HTMLElement, data?: {
+	render(data?: {
 		id: string;
 		image: string;
 		title: string;
@@ -37,31 +39,7 @@ export class CatalogItemView implements IView {
 			this.image.src = data.image;
 			this.title.textContent = data.title;
 			this.category.textContent = data.category;
-			switch (this.category.textContent) {
-				case "софт-скил": {
-					this.category.classList.add('card__category_soft');
-					break;
-				}
-				case "другое": {
-					this.category.classList.add('card__category_other');
-					break;
-				}
-				case "дополнительное": {
-					this.category.classList.add('card__category_additional');
-					break;
-				}
-				case "кнопка": {
-					this.category.classList.add('card__category_button');
-					break;
-				}
-				case "хард-скил": {
-					this.category.classList.add('card__category_hard');
-					break;
-				}
-				default: {
-					this.category.classList.add('card__category_other');
-				}
-			}
+			this.category.classList.add(this.catalogModel.getCategoryClass(data.category));
 			this.price.textContent = `${data.price == null ? 0 : data.price} синапсов`;
 		}
 		return this.container;

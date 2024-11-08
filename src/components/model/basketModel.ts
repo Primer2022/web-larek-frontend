@@ -27,14 +27,6 @@ export class BasketModel implements IBasketModel {
 		this._changed();
 	}
 
-	getProductList(): string[] {
-		return Array.from(this.items.keys());
-	}
-
-	getProductPrice(id: string, price: number): number {
-		return this.items.get(id).amount * price;
-	}
-
 	getBasketPrice(catalogModel: CatalogModel): number {
 		let price = 0;
 		this.items.forEach((value, key): void => {

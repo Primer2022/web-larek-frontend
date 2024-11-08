@@ -7,13 +7,13 @@ import { CatalogView } from './components/view/catalogView';
 import { CatalogItemView } from './components/view/catalogItemView';
 import { BASE_URL } from './utils/constants';
 import { ShopApi } from './components/shopApi';
-import { ProductList } from './components/base/productList';
-import { CardPreviewModal } from './components/view/modal/cardPreviewModal';
-import { BasketModal } from './components/view/modal/basketModal';
-import { OrderFormModal } from './components/view/modal/orderFormModal';
-import { ContactsFormModal } from './components/view/modal/contactsFormModal';
-import { OrderSuccessModal } from './components/view/modal/orderSuccessModal';
-import { IOrder } from './types';
+import { IOrder, IProduct } from './types';
+import { Modal } from './components/model/modal';
+import { ModalView } from './components/view/modalView';
+import { CardPreviewView } from './components/view/cardPreviewView';
+import { ContactsFormView } from './components/view/contactsFormView';
+import { OrderView } from './components/view/orderView';
+import { OrderSuccessView } from './components/view/orderSuccessView';
 
 const api: ShopApi = new ShopApi(BASE_URL, {});
 const events: EventEmitter = new EventEmitter();
@@ -21,66 +21,48 @@ const events: EventEmitter = new EventEmitter();
 // MODEL
 const basketModel: BasketModel = new BasketModel(events);
 const catalogModel: CatalogModel = new CatalogModel(events);
+const modal: Modal = new Modal(
+	document.querySelector('#modal-container'),
+	events
+);
 
 // TEMPLATES
 const catalogItemTemplate: HTMLTemplateElement =
 	document.querySelector('#card-catalog');
-const catalog: HTMLElement = document.querySelector('#gallery');
-
-// MODAL
-const cardPreviewModal: CardPreviewModal = new CardPreviewModal(
-	document.querySelector('#card-preview'),
-	events
-);
-
-const basketModal: BasketModal = new BasketModal(
-	document.querySelector('#basket'),
-	events
-);
-
-const orderFormModal: OrderFormModal = new OrderFormModal(
-	document.querySelector('#order'),
-	events
-);
-
-const contactsFormModal: ContactsFormModal = new ContactsFormModal(
-	document.querySelector('#contacts'),
-	events
-);
-
-const orderSuccessModal: OrderSuccessModal = new OrderSuccessModal(
-	document.querySelector('#success'),
-	events
-);
+const basketItemTemplate: HTMLTemplateElement = document.querySelector(
+	'#card-basket'
+) as HTMLTemplateElement;
 
 // VIEW
+const modalView: ModalView = new ModalView(
+	document.querySelector('#modal-container'),
+	events
+);
 const basketView: BasketView = new BasketView(
 	document.querySelector('.basket'),
-	events
+	events,
+	basketItemTemplate
 );
 const catalogView: CatalogView = new CatalogView(
 	document.querySelector('.gallery')
 );
-
-function renderBasket(size: number) {
-	basketView.render({
-		size: size,
-	});
-	basketModal.setPrice(basketModel.getBasketPrice(catalogModel));
-}
-
-function renderCatalog(items: string[]) {
-	catalogView.render({
-		items: items.map((id: string) => {
-			const itemView: CatalogItemView = new CatalogItemView(
-				id,
-				catalogItemTemplate,
-				events
-			);
-			return itemView.render(catalog, catalogModel.getProduct(id));
-		}),
-	});
-}
+const cardPreviewView: CardPreviewView = new CardPreviewView(
+	document.querySelector('.card_full'),
+	events,
+	catalogModel
+);
+const orderView: OrderView = new OrderView(
+	document.querySelector('#order').querySelector('.form'),
+	events
+);
+const contactsFormView: ContactsFormView = new ContactsFormView(
+	document.querySelector('#contacts').querySelector('.form'),
+	events
+);
+const orderSuccessView: OrderSuccessView = new OrderSuccessView(
+	document.querySelector('.order-success'),
+	events
+);
 
 function setBasketListIndex() {
 	const basketItems: string[] = Array.from(basketModel.items.keys());
@@ -88,70 +70,102 @@ function setBasketListIndex() {
 	for (let i = 0; i < basketItems.length; i++) {
 		items.set(i + 1, basketItems[i]);
 	}
-	basketModal.setListIndex(items);
+	basketView.setListIndex(items);
 }
 
 events.on('basket:change', (event: { items: string[] }): void => {
-	renderBasket(event.items.length);
+	basketView.render({
+		size: event.items.length,
+		price: basketModel.getBasketPrice(catalogModel),
+	});
 });
 
 events.on('catalog:change', (event: { items: string[] }): void => {
-	renderCatalog(event.items);
+	catalogView.render({
+		items: event.items.map((id: string) => {
+			const itemView: CatalogItemView = new CatalogItemView(
+				id,
+				catalogItemTemplate,
+				events,
+				catalogModel
+			);
+			return itemView.render(catalogModel.getProduct(id));
+		}),
+	});
 });
 
 events.on('ui:basket-add', (event: { id: string }): void => {
 	basketModel.add(catalogModel.getProduct(event.id));
-	basketModal.setPrice(basketModel.getBasketPrice(catalogModel));
+	basketView.setPrice(basketModel.getBasketPrice(catalogModel));
 	if (basketModel.items.get(event.id).amount === 1) {
-		basketModal.addItem(basketModel.items.get(event.id));
+		basketView.addItem(basketModel.items.get(event.id));
 	}
-	setBasketListIndex();
 });
 
 events.on('ui:basket-remove', (event: { id: string }): void => {
 	if (basketModel.items.get(event.id).amount === 1) {
-		basketModal.removeItem(event.id);
+		basketView.removeItem(event.id);
 	}
 	basketModel.remove(event.id);
 	setBasketListIndex();
-	basketModal.setPrice(basketModel.getBasketPrice(catalogModel));
+	basketView.setPrice(basketModel.getBasketPrice(catalogModel));
+});
+
+events.on('ui:modal-close', (): void => {
+	modal.close();
 });
 
 events.on('ui:basket-click', (): void => {
-	basketModal.open();
+	modalView.render({
+		content: basketView.render({
+			size: basketModel.items.size,
+			price: basketModel.getBasketPrice(catalogModel),
+		}),
+	});
+	setBasketListIndex();
+	modal.open();
 });
 
 events.on('ui:basket-click-order', (): void => {
 	const items: string[] = [];
 
 	basketModel.items.forEach((item, id) => {
-		for (let i = 0; i < item.amount; i++) {
-			items.push(id);
-		}
+		for (let i = 0; i < item.amount; i++) items.push(id);
 	});
 
-	const order: IOrder = {
-		total: basketModel.getBasketPrice(catalogModel),
-		address: null,
-		email: null,
-		payment: null,
-		items: items,
-		phone: null,
-	};
-	orderFormModal.open();
-	orderFormModal.setOrder(order);
-	orderFormModal.reset();
+	modalView.render({
+		content: orderView.render({
+			total: basketModel.getBasketPrice(catalogModel),
+			address: null,
+			email: null,
+			payment: 'card',
+			items: items,
+			phone: null,
+		}),
+	});
+	modal.open();
 });
 
 events.on('ui:catalog-click', (event: { id: string }): void => {
-	cardPreviewModal.open();
-	cardPreviewModal.fill(catalogModel.getProduct(event.id));
+	const product = catalogModel.getProduct(event.id);
+	modalView.render({
+		content: cardPreviewView.render({
+			image: product.image,
+			category: product.category,
+			title: product.title,
+			text: product.text,
+			price: product.price,
+			id: product.id,
+		}),
+	});
+	modal.open();
 });
 
 events.on('ui:order', (order: IOrder): void => {
-	contactsFormModal.open();
-	contactsFormModal.setOrder(order);
-	contactsFormModal.reset();
+	modalView.render({
+		content: contactsFormView.render(order),
+	});
+	modal.open();
 });
 
 events.on('ui:contacts-order', (order: IOrder): void => {
@@ -159,15 +173,31 @@ events.on('ui:contacts-order', (order: IOrder): void => {
 		.order(order)
 		.then((res) => {
 			if (res) {
-				contactsFormModal.close();
-				orderSuccessModal.open();
-				orderSuccessModal.setPrice(basketModel.getBasketPrice(catalogModel));
-				renderBasket(0);
+				modalView.render({
+					content: orderSuccessView.render({ price: order.total }),
+				});
+				modal.open();
+				basketView.render({
+					size: 0,
+					price: 0,
+				});
+			} else {
+				modal.close();
 			}
 		})
-		.catch(() => {
-			contactsFormModal.close();
+		.catch((res) => {
+			modal.close();
+			console.log(res);
 		});
 });
 
-await api.loadProductList(catalogModel);
+api
+	.loadProductList()
+	.then((res) => {
+		res.items.forEach((product: IProduct) => {
+			catalogModel.addItem(product.id, product);
+		});
+	})
+	.catch((res) => {
+		console.log(res);
+	});

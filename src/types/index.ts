@@ -12,7 +12,7 @@ export interface IEventEmmiter {
 
 export interface IProduct {
 	id: string;
-	description: string;
+	text: string;
 	image: string;
 	title: string;
 	category: string;
@@ -32,11 +32,6 @@ export interface IOrder {
 	payment: string;
 	phone: string;
 	total: number;
-}
-
-export interface IContacts {
-	email: string;
-	phone: string;
 }
 
 export interface ICatalogModel {
