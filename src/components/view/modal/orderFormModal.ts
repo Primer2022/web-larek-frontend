@@ -5,24 +5,15 @@ export class OrderFormModal extends Modal {
 
 	protected addressInput: HTMLInputElement;
 	protected paymentButtons: HTMLButtonElement[] = [];
-	protected paymentMethod: string;
+	protected paymentMethod = 'card';
 	protected orderButton: HTMLButtonElement;
+	protected order: IOrder;
 
-	constructor(
-		protected container: HTMLElement,
-		protected template: HTMLTemplateElement,
-		protected events: IEventEmmiter
-	) {
-		super(container, template, events);
-	}
-
-	addEventListeners(order: IOrder): void {
-		const modalContainer = this.container.querySelector('.form');
-		this.addressInput = modalContainer.querySelector('.form__input[name="address"]');
-		this.orderButton = modalContainer.querySelector('.order__button');
-		this.addressInput.value = '';
-		this.paymentMethod = 'card';
-		modalContainer.querySelectorAll('.button_alt').forEach(button => {
+	constructor(protected container: HTMLDivElement, protected events: IEventEmmiter) {
+		super(container, events);
+		this.addressInput = container.querySelector('.form__input[name="address"]');
+		this.orderButton = container.querySelector('.modal__actions').querySelector('.button');
+		container.querySelectorAll('.button_alt').forEach(button => {
 			this.paymentButtons.push(button as HTMLButtonElement);
 			button.addEventListener('click', event => {
 				const button = (event.target as HTMLButtonElement);
@@ -41,9 +32,23 @@ export class OrderFormModal extends Modal {
 		})
 		this.orderButton.addEventListener('click', event => {
 			event.preventDefault();
-			order.address = this.addressInput.value;
-			order.payment = this.paymentMethod;
-			this.events.emit('ui:order', order)
+			this.order.address = this.addressInput.value;
+			this.order.payment = this.paymentMethod;
+			this.close();
+			this.events.emit('ui:order', this.order)
 		})
+	}
+
+	setOrder(order: IOrder): void {
+		this.order = order;
+	}
+
+	reset(): void {
+		this.addressInput.value = '';
+		this.paymentMethod = 'card'
+		this.paymentButtons.forEach(button => {
+			button.classList.remove('button_alt-active')
+		});
+		this.paymentButtons[0].classList.add('button_alt-active');
 	}
 }

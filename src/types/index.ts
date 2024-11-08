@@ -1,7 +1,7 @@
 export interface IBasketModel {
-	items: Map<string, number>;
+	items: Map<string, IBasketListItem>;
 
-	add(id: string): void;
+	add(product: IProduct): void;
 
 	remove(id: string): void;
 }
@@ -16,6 +16,12 @@ export interface IProduct {
 	image: string;
 	title: string;
 	category: string;
+	price: number;
+}
+
+export interface IBasketListItem {
+	product: IProduct;
+	amount: number;
 	price: number;
 }
 

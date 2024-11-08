@@ -8,4 +8,9 @@ export class ProductList {
     this.items = items;
     this.total = items.length;
   }
+
+  setItems(items: IProduct[]): void {
+    this.items = items;
+    this.total = items.length;
+  }
 }

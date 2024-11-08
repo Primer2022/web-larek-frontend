@@ -11,25 +11,21 @@ export class CardPreviewModal extends Modal {
   protected price: HTMLSpanElement;
   protected basketAddButton: HTMLButtonElement;
 
-  constructor(protected container: HTMLElement, protected template: HTMLTemplateElement, protected events: IEventEmmiter) {
-    super(container, template, events);
-    this.events = events;
-  }
-
-  fill(product: IProduct): void {
-    const modalContainer = this.container.querySelector('.card_full');
-    this.image = modalContainer.querySelector('.card__image');
-    this.category = modalContainer.querySelector('.card__category');
-    this.title = modalContainer.querySelector('.card__title');
-    this.text = modalContainer.querySelector('.card__text');
-    this.price = modalContainer.querySelector('.card__price');
-    this.basketAddButton = modalContainer.querySelector('.button');
-
+  constructor(protected container: HTMLDivElement, protected events: IEventEmmiter) {
+    super(container, events);
+    this.image = container.querySelector('.card__image');
+    this.category = container.querySelector('.card__category');
+    this.title = container.querySelector('.card__title');
+    this.text = container.querySelector('.card__text');
+    this.price = container.querySelector('.card__price');
+    this.basketAddButton = container.querySelector('.button');
     this.basketAddButton.addEventListener('click', () => {
       this.events.emit('ui:basket-add', {id: this.id})
       this.close();
     })
+  }
 
+  fill(product: IProduct): void {
     if(product) {
       this.image.src = product.image;
       this.category.textContent = product.category;

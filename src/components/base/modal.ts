@@ -4,17 +4,12 @@ export class Modal {
   protected closeButton: HTMLButtonElement;
   protected modal: HTMLDivElement;
 
-  constructor(protected container: HTMLElement, protected template: HTMLTemplateElement, protected events: IEventEmmiter) {
-  }
-
-  render(): void {
-    this.modal = this.template.content.cloneNode(true) as HTMLDivElement;
+  constructor(protected container: HTMLElement, protected events: IEventEmmiter) {
     this.closeButton = this.container.querySelector('.modal__close');
-    this.container.querySelector('.modal__content').replaceChildren(this.modal);
+
   }
 
   open(): void {
-    this.render();
     this.closeButton.addEventListener('click', event => this.close())
     this.container.classList.add('modal_active');
     document.onkeydown = e => {

@@ -1,62 +1,57 @@
 import './scss/styles.scss';
 import { EventEmitter } from './components/base/events';
-import { BasketModel } from './components/model/basketmodel';
-import { BasketView } from './components/view/basketview';
-import { CatalogModel } from './components/model/catalogmodel';
-import { CatalogView } from './components/view/catalogview';
-import { CatalogItemView } from './components/view/catalogitemview';
+import { BasketModel } from './components/model/basketModel';
+import { BasketView } from './components/view/basketView';
+import { CatalogModel } from './components/model/catalogModel';
+import { CatalogView } from './components/view/catalogView';
+import { CatalogItemView } from './components/view/catalogItemView';
 import { BASE_URL } from './utils/constants';
-import { ShopApi } from './components/ShopApi';
-import { ProductList } from './components/base/productlist';
-import { CardPreviewModal } from './components/view/modal/cardpreviewmodal';
-import { BasketModal } from './components/view/modal/basketmodal';
-import { OrderFormModal } from './components/view/modal/orderformmodal';
-import { ContactsFormModal } from './components/view/modal/contactsformmodal';
-import { OrderSuccessModal } from './components/view/modal/ordersuccessmodal';
-import { IOrder, IProduct } from "./types";
+import { ShopApi } from './components/shopApi';
+import { ProductList } from './components/base/productList';
+import { CardPreviewModal } from './components/view/modal/cardPreviewModal';
+import { BasketModal } from './components/view/modal/basketModal';
+import { OrderFormModal } from './components/view/modal/orderFormModal';
+import { ContactsFormModal } from './components/view/modal/contactsFormModal';
+import { OrderSuccessModal } from './components/view/modal/orderSuccessModal';
+import { IOrder } from './types';
 
 const api: ShopApi = new ShopApi(BASE_URL, {});
 const events: EventEmitter = new EventEmitter();
-// eslint-disable-next-line @typescript-eslint/ban-ts-comment
-// @ts-ignore
-const productList: ProductList = await api.getProductList();
+
+// MODEL
+const basketModel: BasketModel = new BasketModel(events);
+const catalogModel: CatalogModel = new CatalogModel(events);
 
 // TEMPLATES
 const catalogItemTemplate: HTMLTemplateElement =
 	document.querySelector('#card-catalog');
 const catalog: HTMLElement = document.querySelector('#gallery');
 
-// MODEL
-const basketModel: BasketModel = new BasketModel(events);
-const catalogModel: CatalogModel = new CatalogModel(events);
-
 // MODAL
 const cardPreviewModal: CardPreviewModal = new CardPreviewModal(
-	document.querySelector('#modal-container'),
 	document.querySelector('#card-preview'),
 	events
 );
 
 const basketModal: BasketModal = new BasketModal(
-	document.querySelector('#modal-container'),
 	document.querySelector('#basket'),
 	events
 );
 
 const orderFormModal: OrderFormModal = new OrderFormModal(
-	document.querySelector('#modal-container'),
 	document.querySelector('#order'),
-	events);
+	events
+);
 
 const contactsFormModal: ContactsFormModal = new ContactsFormModal(
-	document.querySelector('#modal-container'),
 	document.querySelector('#contacts'),
-	events);
+	events
+);
 
 const orderSuccessModal: OrderSuccessModal = new OrderSuccessModal(
-	document.querySelector('#modal-container'),
 	document.querySelector('#success'),
-	events);
+	events
+);
 
 // VIEW
 const basketView: BasketView = new BasketView(
@@ -67,12 +62,11 @@ const catalogView: CatalogView = new CatalogView(
 	document.querySelector('.gallery')
 );
 
-function renderBasket(items: string[]) {
+function renderBasket(size: number) {
 	basketView.render({
-		size: items == null || items.length < 1 ? 0 : items
-			.map((id: string) => basketModel.items.get(id))
-			.reduce((a, b) => a + b),
+		size: size,
 	});
+	basketModal.setPrice(basketModel.getBasketPrice(catalogModel));
 }
 
 function renderCatalog(items: string[]) {
@@ -88,21 +82,17 @@ function renderCatalog(items: string[]) {
 	});
 }
 
-function openBasket() {
-	basketModal.open();
-	renderBasketModal();
-}
-
-function renderBasketModal() {
-	const itemsModal: Map<IProduct, number> = new Map();
-	basketModel.items.forEach((amount, id) => {
-		itemsModal.set(catalogModel.items.get(id), basketModel.getProductPrice(id, catalogModel.getProduct(id).price));
-	})
-	basketModal.fill(itemsModal, basketModel.getBasketPrice(catalogModel));
+function setBasketListIndex() {
+	const basketItems: string[] = Array.from(basketModel.items.keys());
+	const items: Map<number, string> = new Map();
+	for (let i = 0; i < basketItems.length; i++) {
+		items.set(i + 1, basketItems[i]);
+	}
+	basketModal.setListIndex(items);
 }
 
 events.on('basket:change', (event: { items: string[] }): void => {
-	renderBasket(event.items);
+	renderBasket(event.items.length);
 });
 
 events.on('catalog:change', (event: { items: string[] }): void => {
@@ -110,30 +100,47 @@ events.on('catalog:change', (event: { items: string[] }): void => {
 });
 
 events.on('ui:basket-add', (event: { id: string }): void => {
-	basketModel.add(event.id);
+	basketModel.add(catalogModel.getProduct(event.id));
+	basketModal.setPrice(basketModel.getBasketPrice(catalogModel));
+	if (basketModel.items.get(event.id).amount === 1) {
+		basketModal.addItem(basketModel.items.get(event.id));
+	}
+	setBasketListIndex();
 });
 
 events.on('ui:basket-remove', (event: { id: string }): void => {
+	if (basketModel.items.get(event.id).amount === 1) {
+		basketModal.removeItem(event.id);
+	}
 	basketModel.remove(event.id);
-	renderBasketModal();
+	setBasketListIndex();
+	basketModal.setPrice(basketModel.getBasketPrice(catalogModel));
 });
 
 events.on('ui:basket-click', (): void => {
-	openBasket();
+	basketModal.open();
 });
 
 events.on('ui:basket-click-order', (): void => {
 	const items: string[] = [];
 
-	basketModel.items.forEach((amount, id) => {
-		for (let i = 0; i < amount; i++) {
+	basketModel.items.forEach((item, id) => {
+		for (let i = 0; i < item.amount; i++) {
 			items.push(id);
 		}
-	})
+	});
 
-	const order: IOrder = {total: basketModel.getBasketPrice(catalogModel), address: null, email: null, payment: null, items: items, phone: null};
+	const order: IOrder = {
+		total: basketModel.getBasketPrice(catalogModel),
+		address: null,
+		email: null,
+		payment: null,
+		items: items,
+		phone: null,
+	};
 	orderFormModal.open();
-	orderFormModal.addEventListeners(order);
+	orderFormModal.setOrder(order);
+	orderFormModal.reset();
 });
 
 events.on('ui:catalog-click', (event: { id: string }): void => {
@@ -143,22 +150,24 @@ events.on('ui:catalog-click', (event: { id: string }): void => {
 
 events.on('ui:order', (order: IOrder): void => {
 	contactsFormModal.open();
-	contactsFormModal.addEventListeners(order);
+	contactsFormModal.setOrder(order);
+	contactsFormModal.reset();
 });
 
-events.on(
-	'ui:contacts-order',
-	(order: IOrder): void => {
-		api.order(order);
-		orderSuccessModal.open();
-		orderSuccessModal.fill(basketModel.getBasketPrice(catalogModel));
-		basketModel.items.clear();
-	}
-);
-
-productList.items.forEach((item) => {
-	catalogModel.addItem(item.id, item);
-	events.emit('catalog:change', {
-		items: Array.from(catalogModel.items.keys()),
-	});
+events.on('ui:contacts-order', (order: IOrder): void => {
+	api
+		.order(order)
+		.then((res) => {
+			if (res) {
+				contactsFormModal.close();
+				orderSuccessModal.open();
+				orderSuccessModal.setPrice(basketModel.getBasketPrice(catalogModel));
+				renderBasket(0);
+			}
+		})
+		.catch(() => {
+			contactsFormModal.close();
+		});
 });
+
+await api.loadProductList(catalogModel);
