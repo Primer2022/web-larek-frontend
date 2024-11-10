@@ -15,7 +15,7 @@ import { ContactsFormView } from './components/view/contactsFormView';
 import { OrderView } from './components/view/orderView';
 import { OrderSuccessView } from './components/view/orderSuccessView';
 import { OrderPresenter } from "./components/model/orderPresenter";
-import { BasketPresenter } from "./components/model/basketPresenter";
+import { BasketItemView } from "./components/view/basketItemView";
 
 const api: ShopApi = new ShopApi(BASE_URL, {});
 const events: EventEmitter = new EventEmitter();
@@ -35,7 +35,7 @@ const modal: Modal = new Modal(
 	events
 );
 const orderPresenter: OrderPresenter = new OrderPresenter();
-const basketPresenter: BasketPresenter = new BasketPresenter(events, basketItemTemplate, basketModel);
+// const basketPresenter: BasketPresenter = new BasketPresenter(events, basketItemTemplate, basketModel);
 
 // VIEW
 const modalView: ModalView = new ModalView(
@@ -67,6 +67,15 @@ const orderSuccessView: OrderSuccessView = new OrderSuccessView(
 	events
 );
 
+function setBasketListIndex() {
+	const itemsView = this.basketModel.itemsView;
+	const itemsId: string[] = Array.from(itemsView.keys());
+	for (let i = 0; i < itemsId.length; i++) {
+		const id = itemsId[i];
+		itemsView.get(id).setItemIndex(i+1)
+	}
+}
+
 events.on('basket:change', (event: { items: string[] }): void => {
 	basketView.render({
 		size: event.items.length,
@@ -80,8 +89,7 @@ events.on('catalog:change', (event: { items: string[] }): void => {
 			const itemView: CatalogItemView = new CatalogItemView(
 				id,
 				catalogItemTemplate,
-				events,
-				catalogModel
+				events
 			);
 			return itemView.render(catalogModel.getProduct(id));
 		}),
@@ -93,7 +101,12 @@ events.on('ui:basket-add', (event: { id: string }): void => {
 	basketView.setPrice(basketModel.getBasketPrice(catalogModel));
 	if (basketModel.items.get(event.id).amount === 1) {
 		const item: IBasketListItem = basketModel.items.get(event.id);
-		const basketItemView = basketPresenter.addItem(item);
+		const basketItemView = new BasketItemView(
+			item.product.id,
+			basketItemTemplate,
+			events
+		);
+		basketModel.itemsView.set(item.product.id, basketItemView);
 		basketView.addItem(basketItemView.render({
 			id: item.product.id,
 			title: item.product.title,
@@ -104,10 +117,11 @@ events.on('ui:basket-add', (event: { id: string }): void => {
 
 events.on('ui:basket-remove', (event: { id: string }): void => {
 	if (basketModel.items.get(event.id).amount === 1) {
-		basketPresenter.removeItem(event.id);
+		basketModel.itemsView.get(event.id).remove();
+		basketModel.itemsView.delete(event.id);
 	}
 	basketModel.remove(event.id);
-	basketPresenter.setBasketListIndex();
+	setBasketListIndex();
 	basketView.setPrice(basketModel.getBasketPrice(catalogModel));
 });
 
@@ -122,7 +136,7 @@ events.on('ui:basket-click', (): void => {
 			price: basketModel.getBasketPrice(catalogModel),
 		}),
 	});
-	basketPresenter.setBasketListIndex();
+	setBasketListIndex();
 	modal.open();
 });
 

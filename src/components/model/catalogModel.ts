@@ -21,29 +21,6 @@ export class CatalogModel implements ICatalogModel {
 		return this.items.get(id);
 	}
 
-	getCategoryClass(category: string): string {
-		switch (category) {
-			case "софт-скил": {
-				return 'card__category_soft';
-			}
-			case "другое": {
-				return 'card__category_other';
-			}
-			case "дополнительное": {
-				return 'card__category_additional';
-			}
-			case "кнопка": {
-				return 'card__category_button';
-			}
-			case "хард-скил": {
-				return 'card__category_hard';
-			}
-			default: {
-				return 'card__category_other';
-			}
-		}
-	}
-
 	protected _changed(items: Map<string, IProduct>) {
 		this.events.emit('catalog:change', {
 			items: Array.from(items.keys()),

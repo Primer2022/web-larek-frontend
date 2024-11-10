@@ -27,6 +27,29 @@ export class CardPreviewView implements IView {
 		});
 	}
 
+	getCategoryClass(category: string): string {
+		switch (category) {
+			case "софт-скил": {
+				return 'card__category_soft';
+			}
+			case "другое": {
+				return 'card__category_other';
+			}
+			case "дополнительное": {
+				return 'card__category_additional';
+			}
+			case "кнопка": {
+				return 'card__category_button';
+			}
+			case "хард-скил": {
+				return 'card__category_hard';
+			}
+			default: {
+				return 'card__category_other';
+			}
+		}
+	}
+
 	render(data?: {
 		image: string;
 		category: string;
@@ -47,10 +70,33 @@ export class CardPreviewView implements IView {
 			for (const value of this.category.classList.values())
 				this.category.classList.remove(value);
 
+			let categoryClass = 'card__category_other';
+
+			switch (data.category) {
+				case "софт-скил": {
+					categoryClass = 'card__category_soft';
+					break;
+				}
+				case "другое": {
+					categoryClass = 'card__category_other';
+					break;
+				}
+				case "дополнительное": {
+					categoryClass = 'card__category_additional';
+					break;
+				}
+				case "кнопка": {
+					categoryClass = 'card__category_button';
+					break;
+				}
+				case "хард-скил": {
+					categoryClass = 'card__category_hard';
+					break;
+				}
+			}
+
 			this.category.classList.add('card__category');
-			this.category.classList.add(
-				this.catalogModel.getCategoryClass(data.category)
-			);
+			this.category.classList.add(categoryClass);
 		}
 		return this.container;
 	}

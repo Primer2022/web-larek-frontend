@@ -12,7 +12,6 @@ export class CatalogItemView implements IView {
 		protected id: string | null,
 		protected template: HTMLTemplateElement,
 		protected events: IEventEmmiter,
-		protected catalogModel: CatalogModel
 	) {
 		this.container = template.content.querySelector(".gallery__item").cloneNode(true) as HTMLButtonElement;
 		this.title = this.container.querySelector('.card__title') as HTMLHeadingElement;
@@ -39,7 +38,34 @@ export class CatalogItemView implements IView {
 			this.image.src = data.image;
 			this.title.textContent = data.title;
 			this.category.textContent = data.category;
-			this.category.classList.add(this.catalogModel.getCategoryClass(data.category));
+
+			let categoryClass = 'card__category_other';
+
+			switch (data.category) {
+				case "софт-скил": {
+					categoryClass = 'card__category_soft';
+					break;
+				}
+				case "другое": {
+					categoryClass = 'card__category_other';
+					break;
+				}
+				case "дополнительное": {
+					categoryClass = 'card__category_additional';
+					break;
+				}
+				case "кнопка": {
+					categoryClass = 'card__category_button';
+					break;
+				}
+				case "хард-скил": {
+					categoryClass = 'card__category_hard';
+					break;
+				}
+			}
+
+			this.category.classList.add('card__category');
+			this.category.classList.add(categoryClass);
 			this.price.textContent = `${data.price == null ? 0 : data.price} синапсов`;
 		}
 		return this.container;
