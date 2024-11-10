@@ -42,6 +42,7 @@ export class BasketView implements IView {
 	reset(): void {
 		this.setCounter(0);
 		this.setPrice(0);
+		this.basketList.replaceChildren();
 	}
 
 	render(data?: { size: number; price: number }): HTMLElement {

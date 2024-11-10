@@ -32,6 +32,15 @@ export class OrderModel {
     this.total = total;
   }
 
+  validateContactForm(email: string, phone: string): boolean {
+    const emailPattern = /^[a-zA-Z0-9._-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,6}$/;
+    const phonePattern = /^\+7\d{3}\d{3}\d{4}$/;
+
+    if (!emailPattern.test(email)) return false;
+    if (!phonePattern.test(phone)) return false;
+    return true;
+  }
+
   getOrder(): IOrder {
     return {
       address: this.address,

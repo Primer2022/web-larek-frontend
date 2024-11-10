@@ -14,11 +14,11 @@ export class ContactsFormView implements IView {
 		this.orderButton = container.querySelector('.button');
 
 		this.email.addEventListener('input', () => {
-			this.orderButton.disabled = !this.valid();
+			events.emit('ui:contacts-validate', { button: this.orderButton,  email: this.email.value, phone: this.phone.value })
 		});
 
 		this.phone.addEventListener('input', () => {
-			this.orderButton.disabled = !this.valid();
+			events.emit('ui:contacts-validate', { button: this.orderButton,  email: this.email.value, phone: this.phone.value })
 		});
 
 		this.orderButton.addEventListener('click', (event) => {
@@ -30,13 +30,10 @@ export class ContactsFormView implements IView {
 		});
 	}
 
-	protected valid(): boolean {
-		return this.email.validity.valid && this.phone.validity.valid;
-	}
-
 	reset(): void {
 		this.email.value = '';
 		this.phone.value = '';
+		this.orderButton.disabled = true;
 	}
 
 	render(): HTMLElement {

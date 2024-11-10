@@ -67,7 +67,7 @@ const orderSuccessView: OrderSuccessView = new OrderSuccessView(
 );
 
 function setBasketListIndex() {
-	const itemsView = this.basketModel.itemsView;
+	const itemsView = basketModel.itemsView;
 	const itemsId: string[] = Array.from(itemsView.keys());
 	for (let i = 0; i < itemsId.length; i++) {
 		const id = itemsId[i];
@@ -96,7 +96,13 @@ events.on('catalog:change', (event: { items: string[] }): void => {
 });
 
 events.on('ui:basket-add', (event: { id: string }): void => {
-	basketModel.add(catalogModel.getProduct(event.id));
+	const product = catalogModel.getProduct(event.id);
+
+	if(product.price <= 0) {
+		return;
+	}
+
+	basketModel.add(product);
 	basketView.setPrice(basketModel.getBasketPrice(catalogModel));
 	if (basketModel.items.get(event.id).amount === 1) {
 		const item: IBasketListItem = basketModel.items.get(event.id);
@@ -113,6 +119,11 @@ events.on('ui:basket-add', (event: { id: string }): void => {
 		}))
 	}
 });
+
+events.on('ui:contacts-validate', (event: { button: HTMLButtonElement,  email: string, phone: string }) => {
+	event.button.disabled = !orderModel.validateContactForm(event.email, event.phone);
+});
+
 
 events.on('ui:basket-remove', (event: { id: string }): void => {
 	if (basketModel.items.get(event.id).amount === 1) {
@@ -147,7 +158,7 @@ events.on('ui:basket-click-order', (): void => {
 	});
 
 	orderModel.setTotal(basketModel.getBasketPrice(catalogModel));
-	orderModel.setItems(Array.from(basketModel.items.keys()));
+	orderModel.setItems(items);
 
 	modalView.render({
 		content: orderView.render(),
@@ -191,7 +202,10 @@ events.on('ui:contacts-order', (data: {email: string, phone: string}): void => {
 					content: orderSuccessView.render({ price: order.total }),
 				});
 				modal.open();
+				basketModel.items.clear();
+				basketModel.itemsView.clear();
 				basketView.reset();
+
 			} else {
 				modal.close();
 			}
