@@ -23,9 +23,6 @@ export class ShopApi extends Api {
 	}
 
 	order(order: IOrder) {
-		order.items.forEach(item => {
-			console.log(item);
-		})
 		this.options = {
 			headers: {
 				'Content-Type': 'application/json;charset=utf-8',
