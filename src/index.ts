@@ -14,8 +14,8 @@ import { CardPreviewView } from './components/view/cardPreviewView';
 import { ContactsFormView } from './components/view/contactsFormView';
 import { OrderView } from './components/view/orderView';
 import { OrderSuccessView } from './components/view/orderSuccessView';
-import { OrderPresenter } from "./components/model/orderPresenter";
 import { BasketItemView } from "./components/view/basketItemView";
+import { OrderModel } from "./components/model/orderModel";
 
 const api: ShopApi = new ShopApi(BASE_URL, {});
 const events: EventEmitter = new EventEmitter();
@@ -34,8 +34,7 @@ const modal: Modal = new Modal(
 	document.querySelector('#modal-container'),
 	events
 );
-const orderPresenter: OrderPresenter = new OrderPresenter();
-// const basketPresenter: BasketPresenter = new BasketPresenter(events, basketItemTemplate, basketModel);
+const orderModel: OrderModel = new OrderModel();
 
 // VIEW
 const modalView: ModalView = new ModalView(
@@ -147,8 +146,8 @@ events.on('ui:basket-click-order', (): void => {
 		for (let i = 0; i < item.amount; i++) items.push(id);
 	});
 
-	orderPresenter.setTotal(basketModel.getBasketPrice(catalogModel));
-	orderPresenter.setItems(Array.from(basketModel.items.keys()));
+	orderModel.setTotal(basketModel.getBasketPrice(catalogModel));
+	orderModel.setItems(Array.from(basketModel.items.keys()));
 
 	modalView.render({
 		content: orderView.render(),
@@ -172,8 +171,8 @@ events.on('ui:catalog-click', (event: { id: string }): void => {
 });
 
 events.on('ui:order', (data: { address: string, payment: string }): void => {
-	orderPresenter.setAddress(data.address);
-	orderPresenter.setPayment(data.payment);
+	orderModel.setAddress(data.address);
+	orderModel.setPayment(data.payment);
 	modalView.render({
 		content: contactsFormView.render(),
 	});
@@ -181,9 +180,9 @@ events.on('ui:order', (data: { address: string, payment: string }): void => {
 });
 
 events.on('ui:contacts-order', (data: {email: string, phone: string}): void => {
-	orderPresenter.setEmail(data.email);
-	orderPresenter.setPhone(data.phone);
-	const order: IOrder = orderPresenter.getOrder();
+	orderModel.setEmail(data.email);
+	orderModel.setPhone(data.phone);
+	const order: IOrder = orderModel.getOrder();
 	api
 		.order(order)
 		.then((res) => {
