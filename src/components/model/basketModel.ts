@@ -1,14 +1,22 @@
-import { IBasketListItem, IBasketModel, IEventEmmiter, IProduct } from "../../types";
-import { CatalogModel } from "./catalogModel";
+import {
+	IBasketListItem,
+	IBasketModel,
+	IEventEmmiter,
+	IProduct,
+} from '../../types';
+import { CatalogModel } from './catalogModel';
+import { BasketItemView } from "../view/basketItemView";
 
 export class BasketModel implements IBasketModel {
 	constructor(protected events: IEventEmmiter) {}
 
 	items: Map<string, IBasketListItem> = new Map();
+	itemsView: Map<string, BasketItemView> = new Map();
 
 	add(product: IProduct): void {
 		const id = product.id;
-		if (!this.items.has(id)) this.items.set(id, {product: product, price: product.price, amount: 0});
+		if (!this.items.has(id))
+			this.items.set(id, { product: product, price: product.price, amount: 0 });
 		const basketListItem = this.items.get(id);
 		basketListItem.amount += 1;
 		this.items.set(id, basketListItem);
@@ -31,7 +39,7 @@ export class BasketModel implements IBasketModel {
 		let price = 0;
 		this.items.forEach((value, key): void => {
 			price += value.amount * catalogModel.getProduct(key).price;
-		})
+		});
 		return price;
 	}
 

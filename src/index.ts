@@ -7,16 +7,25 @@ import { CatalogView } from './components/view/catalogView';
 import { CatalogItemView } from './components/view/catalogItemView';
 import { BASE_URL } from './utils/constants';
 import { ShopApi } from './components/shopApi';
-import { IOrder, IProduct } from './types';
-import { Modal } from './components/model/modal';
+import { IBasketListItem, IOrder, IProduct } from "./types";
+import { Modal } from './components/base/modal';
 import { ModalView } from './components/view/modalView';
 import { CardPreviewView } from './components/view/cardPreviewView';
 import { ContactsFormView } from './components/view/contactsFormView';
 import { OrderView } from './components/view/orderView';
 import { OrderSuccessView } from './components/view/orderSuccessView';
+import { OrderPresenter } from "./components/model/orderPresenter";
+import { BasketPresenter } from "./components/model/basketPresenter";
 
 const api: ShopApi = new ShopApi(BASE_URL, {});
 const events: EventEmitter = new EventEmitter();
+
+// TEMPLATES
+const catalogItemTemplate: HTMLTemplateElement =
+	document.querySelector('#card-catalog');
+const basketItemTemplate: HTMLTemplateElement = document.querySelector(
+	'#card-basket'
+) as HTMLTemplateElement;
 
 // MODEL
 const basketModel: BasketModel = new BasketModel(events);
@@ -25,13 +34,8 @@ const modal: Modal = new Modal(
 	document.querySelector('#modal-container'),
 	events
 );
-
-// TEMPLATES
-const catalogItemTemplate: HTMLTemplateElement =
-	document.querySelector('#card-catalog');
-const basketItemTemplate: HTMLTemplateElement = document.querySelector(
-	'#card-basket'
-) as HTMLTemplateElement;
+const orderPresenter: OrderPresenter = new OrderPresenter();
+const basketPresenter: BasketPresenter = new BasketPresenter(events, basketItemTemplate, basketModel);
 
 // VIEW
 const modalView: ModalView = new ModalView(
@@ -41,7 +45,6 @@ const modalView: ModalView = new ModalView(
 const basketView: BasketView = new BasketView(
 	document.querySelector('.basket'),
 	events,
-	basketItemTemplate
 );
 const catalogView: CatalogView = new CatalogView(
 	document.querySelector('.gallery')
@@ -63,15 +66,6 @@ const orderSuccessView: OrderSuccessView = new OrderSuccessView(
 	document.querySelector('.order-success'),
 	events
 );
-
-function setBasketListIndex() {
-	const basketItems: string[] = Array.from(basketModel.items.keys());
-	const items: Map<number, string> = new Map();
-	for (let i = 0; i < basketItems.length; i++) {
-		items.set(i + 1, basketItems[i]);
-	}
-	basketView.setListIndex(items);
-}
 
 events.on('basket:change', (event: { items: string[] }): void => {
 	basketView.render({
@@ -98,16 +92,22 @@ events.on('ui:basket-add', (event: { id: string }): void => {
 	basketModel.add(catalogModel.getProduct(event.id));
 	basketView.setPrice(basketModel.getBasketPrice(catalogModel));
 	if (basketModel.items.get(event.id).amount === 1) {
-		basketView.addItem(basketModel.items.get(event.id));
+		const item: IBasketListItem = basketModel.items.get(event.id);
+		const basketItemView = basketPresenter.addItem(item);
+		basketView.addItem(basketItemView.render({
+			id: item.product.id,
+			title: item.product.title,
+			price: item.product.price,
+		}))
 	}
 });
 
 events.on('ui:basket-remove', (event: { id: string }): void => {
 	if (basketModel.items.get(event.id).amount === 1) {
-		basketView.removeItem(event.id);
+		basketPresenter.removeItem(event.id);
 	}
 	basketModel.remove(event.id);
-	setBasketListIndex();
+	basketPresenter.setBasketListIndex();
 	basketView.setPrice(basketModel.getBasketPrice(catalogModel));
 });
 
@@ -122,7 +122,7 @@ events.on('ui:basket-click', (): void => {
 			price: basketModel.getBasketPrice(catalogModel),
 		}),
 	});
-	setBasketListIndex();
+	basketPresenter.setBasketListIndex();
 	modal.open();
 });
 
@@ -133,15 +133,11 @@ events.on('ui:basket-click-order', (): void => {
 		for (let i = 0; i < item.amount; i++) items.push(id);
 	});
 
+	orderPresenter.setTotal(basketModel.getBasketPrice(catalogModel));
+	orderPresenter.setItems(Array.from(basketModel.items.keys()));
+
 	modalView.render({
-		content: orderView.render({
-			total: basketModel.getBasketPrice(catalogModel),
-			address: null,
-			email: null,
-			payment: 'card',
-			items: items,
-			phone: null,
-		}),
+		content: orderView.render(),
 	});
 	modal.open();
 });
@@ -161,14 +157,19 @@ events.on('ui:catalog-click', (event: { id: string }): void => {
 	modal.open();
 });
 
-events.on('ui:order', (order: IOrder): void => {
+events.on('ui:order', (data: { address: string, payment: string }): void => {
+	orderPresenter.setAddress(data.address);
+	orderPresenter.setPayment(data.payment);
 	modalView.render({
-		content: contactsFormView.render(order),
+		content: contactsFormView.render(),
 	});
 	modal.open();
 });
 
-events.on('ui:contacts-order', (order: IOrder): void => {
+events.on('ui:contacts-order', (data: {email: string, phone: string}): void => {
+	orderPresenter.setEmail(data.email);
+	orderPresenter.setPhone(data.phone);
+	const order: IOrder = orderPresenter.getOrder();
 	api
 		.order(order)
 		.then((res) => {
@@ -177,10 +178,7 @@ events.on('ui:contacts-order', (order: IOrder): void => {
 					content: orderSuccessView.render({ price: order.total }),
 				});
 				modal.open();
-				basketView.render({
-					size: 0,
-					price: 0,
-				});
+				basketView.reset();
 			} else {
 				modal.close();
 			}

@@ -1,5 +1,8 @@
+import { BasketItemView } from "../components/view/basketItemView";
+
 export interface IBasketModel {
 	items: Map<string, IBasketListItem>;
+	itemsView: Map<string, BasketItemView>;
 
 	add(product: IProduct): void;
 

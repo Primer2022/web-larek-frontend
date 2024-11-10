@@ -1,5 +1,4 @@
-import { IBasketListItem, IEventEmmiter, IView } from '../../types';
-import { BasketItemView } from './basketItemView';
+import { IEventEmmiter, IView } from '../../types';
 
 export class BasketView implements IView {
 	protected title: HTMLHeadingElement;
@@ -9,8 +8,7 @@ export class BasketView implements IView {
 
 	constructor(
 		protected container: HTMLElement,
-		protected events: IEventEmmiter,
-		protected basketItemTemplate: HTMLTemplateElement
+		protected events: IEventEmmiter
 	) {
 		const basketButton: HTMLButtonElement =
 			document.querySelector('.header__basket');
@@ -30,48 +28,25 @@ export class BasketView implements IView {
 		this.price.textContent = `${price} синапсов`;
 	}
 
-	setListIndex(items: Map<number, string>): void {
-		items.forEach((id: string, index: number) => {
-			this.setItemIndex(id, index);
-		});
-	}
-
-	setItemIndex(id: string, index: number): void {
-		const cardBasket = document.getElementById(`${id}`);
-		if (cardBasket) {
-			cardBasket.querySelector('.basket__item-index').textContent =
-				String(index);
-		}
-	}
-
-	addItem(item: IBasketListItem): void {
-		const basketItemView = new BasketItemView(
-			item.product.id,
-			this.basketList,
-			this.basketItemTemplate,
-			this.events
+	setCounter(size: number): void {
+		const counter: HTMLSpanElement = document.querySelector(
+			'.header__basket-counter'
 		);
-		basketItemView.render({
-			id: item.product.id,
-			title: item.product.title,
-			price: item.product.price,
-		});
+		counter.textContent = String(size);
 	}
 
-	removeItem(id: string): void {
-		const basketItem = document.getElementById(`${id}`);
+	addItem(basketItem: HTMLElement): void {
+		this.basketList.appendChild(basketItem);
+	}
 
-		if (basketItem) {
-			basketItem.remove();
-		}
+	reset(): void {
+		this.setCounter(0);
+		this.setPrice(0);
 	}
 
 	render(data?: { size: number; price: number }): HTMLElement {
 		if (data) {
-			const counter: HTMLSpanElement = document.querySelector(
-				'.header__basket-counter'
-			);
-			counter.textContent = String(data.size);
+			this.setCounter(data.size);
 			this.setPrice(data.price);
 		}
 		return this.container;

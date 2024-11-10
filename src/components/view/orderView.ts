@@ -5,7 +5,6 @@ export class OrderView implements IView {
 	protected address: HTMLInputElement;
 	protected orderButton: HTMLButtonElement;
 	protected orderButtons: HTMLButtonElement[] = [];
-	protected order: IOrder;
 
 	constructor(
 		protected container: HTMLElement,
@@ -39,17 +38,16 @@ export class OrderView implements IView {
 		});
 
 		this.orderButton.addEventListener('click', () => {
-			this.order.address = this.address.value;
-			events.emit('ui:order', this.order);
+			events.emit('ui:order', {address: this.address.value, payment: this.payMethod});
 		});
 	}
 
 	reset(): void {
-		this.payMethod = '';
+		this.payMethod = 'card';
 		this.address.value = '';
 
 		this.orderButtons.forEach((button) => {
-			if (button.name === this.order.payment) {
+			if (button.name === this.payMethod) {
 				button.classList.add('button_alt-active');
 			} else {
 				button.classList.remove('button_alt-active');
@@ -57,11 +55,7 @@ export class OrderView implements IView {
 		});
 	}
 
-	render(order: IOrder): HTMLElement {
-		if (order) {
-			this.order = order;
-		}
-
+	render(): HTMLElement {
 		this.reset();
 		return this.container;
 	}

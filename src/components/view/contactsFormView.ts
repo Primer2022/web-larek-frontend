@@ -1,10 +1,9 @@
-import { IEventEmmiter, IOrder, IView } from "../../types";
+import { IEventEmmiter, IOrder, IView } from '../../types';
 
 export class ContactsFormView implements IView {
 	protected email: HTMLInputElement;
 	protected phone: HTMLInputElement;
 	protected orderButton: HTMLButtonElement;
-	protected order: IOrder;
 
 	constructor(
 		protected container: HTMLElement,
@@ -24,28 +23,23 @@ export class ContactsFormView implements IView {
 
 		this.orderButton.addEventListener('click', (event) => {
 			event.preventDefault();
-			this.order.email = this.email.value;
-			this.order.phone = this.phone.value;
-			this.events.emit('ui:contacts-order', this.order);
+			this.events.emit('ui:contacts-order', {
+				email: this.email.value,
+				phone: this.phone.value,
+			});
 		});
 	}
 
 	protected valid(): boolean {
-		return (
-			this.email.validity.valid && this.phone.validity.valid
-		);
+		return this.email.validity.valid && this.phone.validity.valid;
 	}
 
 	reset(): void {
-		this.email.value = "";
-		this.phone.value = "";
+		this.email.value = '';
+		this.phone.value = '';
 	}
 
-	render(order: IOrder): HTMLElement {
-		if(order) {
-			this.order = order;
-		}
-
+	render(): HTMLElement {
 		this.reset();
 		return this.container;
 	}
