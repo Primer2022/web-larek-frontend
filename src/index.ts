@@ -7,15 +7,14 @@ import { CatalogView } from './components/view/catalogView';
 import { CatalogItemView } from './components/view/catalogItemView';
 import { BASE_URL } from './utils/constants';
 import { ShopApi } from './components/shopApi';
-import { IBasketListItem, IOrder, IProduct } from "./types";
-import { Modal } from './components/base/modal';
 import { ModalView } from './components/view/modalView';
 import { CardPreviewView } from './components/view/cardPreviewView';
 import { ContactsFormView } from './components/view/contactsFormView';
 import { OrderView } from './components/view/orderView';
 import { OrderSuccessView } from './components/view/orderSuccessView';
-import { BasketItemView } from "./components/view/basketItemView";
-import { OrderModel } from "./components/model/orderModel";
+import { BasketItemView } from './components/view/basketItemView';
+import { OrderModel } from './components/model/orderModel';
+import { IOrder, IProduct } from "./types";
 
 const api: ShopApi = new ShopApi(BASE_URL, {});
 const events: EventEmitter = new EventEmitter();
@@ -30,10 +29,6 @@ const basketItemTemplate: HTMLTemplateElement = document.querySelector(
 // MODEL
 const basketModel: BasketModel = new BasketModel(events);
 const catalogModel: CatalogModel = new CatalogModel(events);
-const modal: Modal = new Modal(
-	document.querySelector('#modal-container'),
-	events
-);
 const orderModel: OrderModel = new OrderModel();
 
 // VIEW
@@ -43,7 +38,7 @@ const modalView: ModalView = new ModalView(
 );
 const basketView: BasketView = new BasketView(
 	document.querySelector('.basket'),
-	events,
+	events
 );
 const catalogView: CatalogView = new CatalogView(
 	document.querySelector('.gallery')
@@ -51,7 +46,7 @@ const catalogView: CatalogView = new CatalogView(
 const cardPreviewView: CardPreviewView = new CardPreviewView(
 	document.querySelector('.card_full'),
 	events,
-	catalogModel
+	basketModel
 );
 const orderView: OrderView = new OrderView(
 	document.querySelector('#order').querySelector('.form'),
@@ -65,15 +60,6 @@ const orderSuccessView: OrderSuccessView = new OrderSuccessView(
 	document.querySelector('.order-success'),
 	events
 );
-
-function setBasketListIndex() {
-	const itemsView = basketModel.itemsView;
-	const itemsId: string[] = Array.from(itemsView.keys());
-	for (let i = 0; i < itemsId.length; i++) {
-		const id = itemsId[i];
-		itemsView.get(id).setItemIndex(i+1)
-	}
-}
 
 events.on('basket:change', (event: { items: string[] }): void => {
 	basketView.render({
@@ -97,73 +83,76 @@ events.on('catalog:change', (event: { items: string[] }): void => {
 
 events.on('ui:basket-add', (event: { id: string }): void => {
 	const product = catalogModel.getProduct(event.id);
+	basketModel.add(product.id);
+	const basketItemView = new BasketItemView(
+		product.id,
+		basketItemTemplate,
+		events
+	);
+	basketView.itemsView.set(product.id, basketItemView);
+	basketView.addItem(
+		basketItemView.render({
+			id: product.id,
+			title: product.title,
+			price: product.price,
+		})
+	);
+});
 
-	if(product.price <= 0) {
-		return;
-	}
-
-	basketModel.add(product);
-	basketView.setPrice(basketModel.getBasketPrice(catalogModel));
-	if (basketModel.items.get(event.id).amount === 1) {
-		const item: IBasketListItem = basketModel.items.get(event.id);
-		const basketItemView = new BasketItemView(
-			item.product.id,
-			basketItemTemplate,
-			events
+events.on(
+	'ui:contacts-validate',
+	(event: {
+		button: HTMLButtonElement;
+		emailInput: HTMLInputElement;
+		phoneInput: HTMLInputElement;
+	}) => {
+		const emailValid: boolean = orderModel.validateEmail(
+			event.emailInput.value
 		);
-		basketModel.itemsView.set(item.product.id, basketItemView);
-		basketView.addItem(basketItemView.render({
-			id: item.product.id,
-			title: item.product.title,
-			price: item.product.price,
-		}))
+		const phoneValid: boolean = orderModel.validatePhone(
+			event.phoneInput.value
+		);
+
+		event.button.disabled = !emailValid || !phoneValid;
 	}
-});
-
-events.on('ui:contacts-validate', (event: { button: HTMLButtonElement,  email: string, phone: string }) => {
-	event.button.disabled = !orderModel.validateContactForm(event.email, event.phone);
-});
-
+);
 
 events.on('ui:basket-remove', (event: { id: string }): void => {
-	if (basketModel.items.get(event.id).amount === 1) {
-		basketModel.itemsView.get(event.id).remove();
-		basketModel.itemsView.delete(event.id);
-	}
+	basketView.itemsView.get(event.id).remove();
+	basketView.itemsView.delete(event.id);
 	basketModel.remove(event.id);
-	setBasketListIndex();
-	basketView.setPrice(basketModel.getBasketPrice(catalogModel));
+	modalView.render({
+		content: basketView.render({
+			size: basketModel.items.length,
+			price: basketModel.getBasketPrice(catalogModel),
+		}),
+	});
 });
 
 events.on('ui:modal-close', (): void => {
-	modal.close();
+	modalView.close();
 });
 
 events.on('ui:basket-click', (): void => {
 	modalView.render({
 		content: basketView.render({
-			size: basketModel.items.size,
+			size: basketModel.items.length,
 			price: basketModel.getBasketPrice(catalogModel),
 		}),
 	});
-	setBasketListIndex();
-	modal.open();
+	basketView.setBasketListIndex();
+	modalView.open();
 });
 
 events.on('ui:basket-click-order', (): void => {
 	const items: string[] = [];
 
-	basketModel.items.forEach((item, id) => {
-		for (let i = 0; i < item.amount; i++) items.push(id);
-	});
+	basketModel.items.forEach((id) => items.push(id));
 
 	orderModel.setTotal(basketModel.getBasketPrice(catalogModel));
 	orderModel.setItems(items);
 
-	modalView.render({
-		content: orderView.render(),
-	});
-	modal.open();
+	modalView.render({ content: orderView.render() });
 });
 
 events.on('ui:catalog-click', (event: { id: string }): void => {
@@ -178,43 +167,40 @@ events.on('ui:catalog-click', (event: { id: string }): void => {
 			id: product.id,
 		}),
 	});
-	modal.open();
+	modalView.open();
 });
 
-events.on('ui:order', (data: { address: string, payment: string }): void => {
+events.on('ui:order', (data: { address: string; payment: string }): void => {
 	orderModel.setAddress(data.address);
 	orderModel.setPayment(data.payment);
-	modalView.render({
-		content: contactsFormView.render(),
-	});
-	modal.open();
+	modalView.render({ content: contactsFormView.render() });
 });
 
-events.on('ui:contacts-order', (data: {email: string, phone: string}): void => {
-	orderModel.setEmail(data.email);
-	orderModel.setPhone(data.phone);
-	const order: IOrder = orderModel.getOrder();
-	api
-		.order(order)
-		.then((res) => {
-			if (res) {
-				modalView.render({
-					content: orderSuccessView.render({ price: order.total }),
-				});
-				modal.open();
-				basketModel.items.clear();
-				basketModel.itemsView.clear();
-				basketView.reset();
-
-			} else {
-				modal.close();
-			}
-		})
-		.catch((res) => {
-			modal.close();
-			console.log(res);
-		});
-});
+events.on(
+	'ui:contacts-order',
+	(data: { email: string; phone: string }): void => {
+		orderModel.setEmail(data.email);
+		orderModel.setPhone(data.phone);
+		const order: IOrder = orderModel.getOrder();
+		api
+			.order(order)
+			.then((res) => {
+				if (res) {
+					modalView.render({
+						content: orderSuccessView.render({ price: order.total }),
+					});
+					basketModel.items.splice(0, basketModel.items.length);
+					basketView.itemsView.clear();
+					basketView.reset();
+				} else {
+					modalView.close();
+				}
+			})
+			.catch((res) => {
+				console.log(res);
+			});
+	}
+);
 
 api
 	.loadProductList()

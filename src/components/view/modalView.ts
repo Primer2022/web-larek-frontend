@@ -11,6 +11,35 @@ export class ModalView implements IView {
     })
   }
 
+  open(): void {
+    this.container.classList.add('modal_active');
+    document.onkeydown = e => {
+      if (e.key === "Escape") {
+        this.close();
+      }
+    }
+
+    this.container.addEventListener('click', (event) => {
+      if (event.target === this.container) {
+        this.close();
+      }
+    });
+  }
+
+  close(): void {
+    this.container.classList.remove('modal_active');
+    document.removeEventListener('keydown', (e) => {
+      if (e.key === "Escape") {
+        this.close();
+      }
+    })
+    this.container.addEventListener('click', (event) => {
+      if (event.target === this.container) {
+        this.close();
+      }
+    });
+  }
+
   render(data?: { content: HTMLElement }): HTMLElement {
     if (data) {
       const modalContent = this.container.querySelector('.modal__content');

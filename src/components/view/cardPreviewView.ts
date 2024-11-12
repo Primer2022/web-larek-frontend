@@ -1,5 +1,5 @@
 import { IEventEmmiter, IView } from '../../types';
-import { CatalogModel } from '../model/catalogModel';
+import { BasketModel } from '../model/basketModel';
 
 export class CardPreviewView implements IView {
 	protected id: string;
@@ -13,7 +13,7 @@ export class CardPreviewView implements IView {
 	constructor(
 		protected container: HTMLElement,
 		protected events: IEventEmmiter,
-		protected catalogModel: CatalogModel
+		protected basketModel: BasketModel
 	) {
 		this.image = container.querySelector('.card__image');
 		this.category = container.querySelector('.card__category');
@@ -29,19 +29,19 @@ export class CardPreviewView implements IView {
 
 	getCategoryClass(category: string): string {
 		switch (category) {
-			case "софт-скил": {
+			case 'софт-скил': {
 				return 'card__category_soft';
 			}
-			case "другое": {
+			case 'другое': {
 				return 'card__category_other';
 			}
-			case "дополнительное": {
+			case 'дополнительное': {
 				return 'card__category_additional';
 			}
-			case "кнопка": {
+			case 'кнопка': {
 				return 'card__category_button';
 			}
-			case "хард-скил": {
+			case 'хард-скил': {
 				return 'card__category_hard';
 			}
 			default: {
@@ -58,7 +58,11 @@ export class CardPreviewView implements IView {
 		price: number;
 		id: string;
 	}): HTMLElement {
+		this.basketAddButton.disabled = false;
 		if (data) {
+			if (data.price == null || this.basketModel.items.includes(data.id)) {
+				this.basketAddButton.disabled = true;
+			}
 			this.image.src = data.image;
 			this.category.textContent = data.category;
 			this.title.textContent = data.title;
@@ -73,23 +77,23 @@ export class CardPreviewView implements IView {
 			let categoryClass = 'card__category_other';
 
 			switch (data.category) {
-				case "софт-скил": {
+				case 'софт-скил': {
 					categoryClass = 'card__category_soft';
 					break;
 				}
-				case "другое": {
+				case 'другое': {
 					categoryClass = 'card__category_other';
 					break;
 				}
-				case "дополнительное": {
+				case 'дополнительное': {
 					categoryClass = 'card__category_additional';
 					break;
 				}
-				case "кнопка": {
+				case 'кнопка': {
 					categoryClass = 'card__category_button';
 					break;
 				}
-				case "хард-скил": {
+				case 'хард-скил': {
 					categoryClass = 'card__category_hard';
 					break;
 				}

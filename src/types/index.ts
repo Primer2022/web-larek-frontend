@@ -1,10 +1,7 @@
-import { BasketItemView } from "../components/view/basketItemView";
-
 export interface IBasketModel {
-	items: Map<string, IBasketListItem>;
-	itemsView: Map<string, BasketItemView>;
+	items: string[];
 
-	add(product: IProduct): void;
+	add(id: string): void;
 
 	remove(id: string): void;
 }
@@ -19,12 +16,6 @@ export interface IProduct {
 	image: string;
 	title: string;
 	category: string;
-	price: number;
-}
-
-export interface IBasketListItem {
-	product: IProduct;
-	amount: number;
 	price: number;
 }
 

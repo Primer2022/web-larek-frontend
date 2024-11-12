@@ -110,11 +110,11 @@
         <div class="order">
           <label class="order__field">
             <span class="form__label modal__title">Email</span>
-            <input class="form__input" name="email" type="text" placeholder="Введите Email" />
+            <input class="form__input" name="email" type="text" placeholder="Введите Email" pattern="^[a-zA-Z0-9._\-]+@[a-zA-Z0-9.\-]+\.[a-zA-Z]{2,6}$"/>
           </label>
           <label class="order__field">
             <span class="form__label modal__title">Телефон</span>
-            <input class="form__input" name="phone" type="text" placeholder="+7 (" />
+            <input class="form__input" name="phone" type="text" placeholder="+7 (" pattern="^\+7\d{3}\d{3}\d{4}$" />
           </label>
         </div>
         <div class="modal__actions">

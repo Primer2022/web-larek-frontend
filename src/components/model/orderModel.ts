@@ -32,13 +32,14 @@ export class OrderModel {
     this.total = total;
   }
 
-  validateContactForm(email: string, phone: string): boolean {
+  validateEmail(email: string): boolean {
     const emailPattern = /^[a-zA-Z0-9._-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,6}$/;
-    const phonePattern = /^\+7\d{3}\d{3}\d{4}$/;
+    return emailPattern.test(email);
+  }
 
-    if (!emailPattern.test(email)) return false;
-    if (!phonePattern.test(phone)) return false;
-    return true;
+  validatePhone(phone: string): boolean {
+    const phonePattern = /^\+7\d{3}\d{3}\d{4}$/;
+    return phonePattern.test(phone);
   }
 
   getOrder(): IOrder {
